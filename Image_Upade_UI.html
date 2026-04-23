@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Infographic Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --bg: #0e0e10;
+    --panel: #16161a;
+    --panel2: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --accent: #c8f04a;
+    --gold: #f0c84a;
+    --text: #f0ede8;
+    --muted: #7a7a8a;
+    --red: #f04a4a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    height: 100vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .logo-text { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+
+  .sec-label {
+    font-size: 10px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Upload */
+  .upload-box {
+    border: 1.5px dashed rgba(200,240,74,.3);
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: rgba(200,240,74,.03);
+  }
+  .upload-box:hover { border-color: var(--accent); background: rgba(200,240,74,.06); }
+  .upload-box.loaded { border-color: var(--accent); border-style: solid; }
+  .upload-box .icon { font-size: 22px; display: block; margin-bottom: 5px; }
+  .upload-box .name { font-size: 12px; color: var(--text); display: block; margin-bottom: 2px; }
+  .upload-box .hint { font-size: 10px; color: var(--muted); }
+
+  /* Filename input */
+  .filename-input {
+    width: 100%;
+    padding: 9px 11px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .filename-input:focus { border-color: var(--accent); }
+  .filename-input::placeholder { color: var(--muted); }
+  .filename-hint { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  /* Ghost info chips */
+  .chips { display: flex; flex-direction: column; gap: 4px; }
+  .chip {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel2); border-radius: 7px;
+    padding: 5px 10px; font-size: 11px;
+  }
+  .chip-key { color: var(--muted); }
+  .chip-val { color: var(--accent); font-weight: 500; }
+
+  /* Zoom stepper */
+  .stepper {
+    display: flex; align-items: stretch;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 44px;
+  }
+  .step-btn {
+    width: 44px; border: none; background: transparent;
+    color: var(--text); font-size: 24px; font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .12s; flex-shrink: 0;
+    user-select: none; touch-action: manipulation; line-height: 1;
+  }
+  .step-btn:hover { background: rgba(200,240,74,.14); color: var(--accent); }
+  .step-btn:active { background: rgba(200,240,74,.25); }
+  .step-btn:disabled { opacity: .25; cursor: not-allowed; pointer-events: none; }
+  .step-divider { width: 1px; background: var(--border); flex-shrink: 0; }
+  .step-val {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500; color: var(--text);
+  }
+  .step-hint { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .step-reset {
+    font-size: 10px; color: var(--muted); text-align: center;
+    cursor: pointer; text-decoration: underline; display: block;
+    background: none; border: none; font-family: inherit; width: 100%;
+  }
+  .step-reset:hover { color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    width: 100%; padding: 10px; border-radius: 9px;
+    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .15s;
+  }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-apply { background: var(--accent); color: #0e0e10; }
+  .btn-apply:hover:not(:disabled) { background: #d4ff52; transform: translateY(-1px); }
+  .btn-hd { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .btn-hd:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .btn-4k { background: var(--gold); color: #0e0e10; }
+  .btn-4k:hover:not(:disabled) { background: #ffd45a; transform: translateY(-1px); }
+  .btn-reset { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-reset:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+
+  /* ── MAIN ── */
+  main {
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .top-row { display: flex; align-items: flex-start; justify-content: space-between; }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; line-height: 1; }
+  .page-title span { color: var(--accent); }
+  .page-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .status-pill {
+    display: none; align-items: center; gap: 5px;
+    background: rgba(200,240,74,.1); border: 1px solid rgba(200,240,74,.2);
+    border-radius: 20px; padding: 4px 10px;
+    font-size: 11px; color: var(--accent);
+  }
+  .status-pill.on { display: flex; }
+  .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* Preview */
+  .preview {
+    flex: 1; min-height: 500px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Checkerboard */
+  .preview::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+      linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+      linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    opacity: .18;
+  }
+
+  .empty {
+    position: absolute; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-align: center; padding: 2rem;
+  }
+  .empty-icon { font-size: 44px; opacity: .15; }
+  .empty p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .empty-btn {
+    margin-top: 4px; padding: 8px 18px; border-radius: 9px;
+    background: var(--accent); color: #0e0e10;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: none; font-family: 'DM Mono', monospace;
+  }
+  .empty-btn:hover { background: #d4ff52; }
+
+  #canvas {
+    position: relative; z-index: 1;
+    max-width: calc(100% - 24px);
+    max-height: calc(100vh - 180px);
+    border-radius: 6px;
+    display: none;
+  }
+  #canvas.show { display: block; }
+
+  /* Float zoom over canvas */
+  .float-zoom {
+    position: absolute; bottom: 12px; right: 12px; z-index: 5;
+    display: none; align-items: center; gap: 2px;
+    background: rgba(14,14,16,.88); border: 1px solid var(--border);
+    border-radius: 9px; padding: 3px;
+    backdrop-filter: blur(6px);
+  }
+  .float-zoom.show { display: flex; }
+  .fz-btn {
+    width: 26px; height: 26px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text);
+    font-size: 18px; font-weight: 700; font-family: 'Syne', sans-serif;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .12s; user-select: none; touch-action: manipulation; line-height: 1;
+  }
+  .fz-btn:hover { background: rgba(200,240,74,.15); color: var(--accent); }
+  .fz-label { font-size: 11px; color: var(--muted); min-width: 40px; text-align: center; }
+
+  /* Spinner */
+  .spinner-wrap {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(14,14,16,.88);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 10px; border-radius: 14px;
+  }
+  .spinner-wrap.on { display: flex; }
+  .spinner {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid var(--panel2); border-top-color: var(--accent);
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-wrap p { font-size: 11px; color: var(--muted); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--red); color: var(--red);
+    font-size: 12px; padding: 9px 18px; border-radius: 9px;
+    z-index: 9999; opacity: 0; transition: opacity .3s;
+    pointer-events: none; max-width: 400px; text-align: center;
+  }
+  .toast.on { opacity: 1; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--panel2); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- File input at body root — avoids all click-blocking issues -->
+<input type="file" id="fileInput" accept="image/*"
+  style="position:fixed;top:-999px;left:-999px;width:1px;height:1px;opacity:0">
+
+<!-- SIDEBAR -->
+<aside>
+
+  <div class="logo">
+    <div class="logo-mark">👻</div>
+    <div>
+      <div class="logo-text">Ghost Studio</div>
+      <div class="logo-sub">Infographic FX</div>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div>
+    <div class="sec-label">Image</div>
+    <div class="upload-box" id="uploadBox">
+      <span class="icon" id="uploadIcon">📁</span>
+      <span class="name" id="uploadName">Click to choose image</span>
+      <span class="hint">JPG · PNG · WEBP · drag & drop</span>
+    </div>
+  </div>
+
+  <!-- Filename -->
+  <div>
+    <div class="sec-label">Filename</div>
+    <input class="filename-input" type="text" id="filenameInput"
+      placeholder="e.g. cheetah_india" maxlength="80">
+    <div class="filename-hint">Used as the download filename only. Not stamped on image.</div>
+  </div>
+
+  <!-- Ghost settings (fixed, display only) -->
+  <div>
+    <div class="sec-label">Ghost background <span style="font-size:9px;color:var(--accent);letter-spacing:0;text-transform:none;margin-left:3px">auto</span></div>
+    <div class="chips">
+      <div class="chip"><span class="chip-key">Opacity</span><span class="chip-val">50%</span></div>
+      <div class="chip"><span class="chip-key">Blur</span><span class="chip-val">max</span></div>
+      <div class="chip"><span class="chip-key">Vintage</span><span class="chip-val">+100</span></div>
+      <div class="chip"><span class="chip-key">Desaturate</span><span class="chip-val">full</span></div>
+      <div class="chip"><span class="chip-key">Position</span><span class="chip-val">centered</span></div>
+    </div>
+  </div>
+
+  <!-- Zoom -->
+  <div>
+    <div class="sec-label">Front image zoom</div>
+    <div class="stepper">
+      <button class="step-btn" id="zoomOut"
+        onmousedown="holdStart(-1)" onmouseup="holdStop()" onmouseleave="holdStop()"
+        ontouchstart="holdStart(-1)" ontouchend="holdStop()" disabled>−</button>
+      <div class="step-divider"></div>
+      <div class="step-val" id="zoomVal">100%</div>
+      <div class="step-divider"></div>
+      <button class="step-btn" id="zoomIn"
+        onmousedown="holdStart(+1)" onmouseup="holdStop()" onmouseleave="holdStop()"
+        ontouchstart="holdStart(+1)" ontouchend="holdStop()" disabled>+</button>
+    </div>
+    <div class="step-hint">1% per step · hold for continuous · 10%–200%</div>
+    <button class="step-reset" onclick="resetZoom()">↺ reset to 100%</button>
+  </div>
+
+  <!-- Actions -->
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:7px">
+    <button class="btn btn-apply" id="applyBtn" onclick="render()" disabled>
+      ▶ Apply ghost effect
+    </button>
+    <button class="btn btn-hd" id="hdBtn" onclick="download('hd')" disabled>
+      ↓ Download HD (1920px)
+    </button>
+    <button class="btn btn-4k" id="btn4k" onclick="download('4k')" disabled>
+      ↓ Download 4K (3840px)
+    </button>
+    <button class="btn btn-reset" id="resetBtn" onclick="resetCanvas()" disabled>
+      ↺ Reset canvas
+    </button>
+  </div>
+
+</aside>
+
+<!-- MAIN -->
+<main>
+
+  <div class="top-row">
+    <div>
+      <div class="page-title">Ghost <span>FX</span></div>
+      <div class="page-sub">Zoom out → ghost fills background automatically</div>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <div class="pulse"></div>
+      <span id="statusTxt">Ready</span>
+    </div>
+  </div>
+
+  <div class="preview" id="previewWrap">
+
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">👻</div>
+      <p>Upload your image.<br>Zoom out → ghost effect fills the background.<br>Name your file → download HD or 4K.</p>
+      <button class="empty-btn" id="emptyBtn">Choose image</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Floating zoom controls -->
+    <div class="float-zoom" id="floatZoom">
+      <button class="fz-btn"
+        onmousedown="holdStart(-1)" onmouseup="holdStop()" onmouseleave="holdStop()"
+        ontouchstart="holdStart(-1)" ontouchend="holdStop()">−</button>
+      <div class="fz-label" id="floatZoomVal">100%</div>
+      <button class="fz-btn"
+        onmousedown="holdStart(+1)" onmouseup="holdStop()" onmouseleave="holdStop()"
+        ontouchstart="holdStart(+1)" ontouchend="holdStop()">+</button>
+    </div>
+
+    <div class="spinner-wrap" id="spinnerWrap">
+      <div class="spinner"></div>
+      <p id="spinnerTxt">Rendering…</p>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ─── State ─── */
+let srcImg    = null;
+let srcURL    = null;
+let zoom      = 100;   // 10–200, integer
+let hdCanvas  = null;
+let k4Canvas  = null;
+
+/* ─── File input ─── */
+const fileInput  = document.getElementById('fileInput');
+const uploadBox  = document.getElementById('uploadBox');
+const emptyBtn   = document.getElementById('emptyBtn');
+
+function openPicker() { fileInput.value = ''; fileInput.click(); }
+
+uploadBox.addEventListener('click', openPicker);
+emptyBtn.addEventListener('click',  openPicker);
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files && fileInput.files[0]) loadFile(fileInput.files[0]);
+});
+
+/* Drag & drop — both sidebar box and preview area */
+[uploadBox, document.getElementById('previewWrap')].forEach(el => {
+  el.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); el.style.outline = '2px solid #c8f04a'; });
+  el.addEventListener('dragleave', () => el.style.outline = '');
+  el.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation(); el.style.outline = '';
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+  });
+});
+
+function loadFile(file) {
+  if (!file.type.startsWith('image/')) { toast('Please upload an image file (JPG, PNG, WEBP)'); return; }
+  if (srcURL) URL.revokeObjectURL(srcURL);
+  srcURL = URL.createObjectURL(file);
+
+  const img = new Image();
+  img.onload = () => {
+    srcImg = img;
+    document.getElementById('uploadName').textContent = file.name;
+    document.getElementById('uploadIcon').textContent = '✅';
+    uploadBox.classList.add('loaded');
+    enable();
+    render();
+  };
+  img.onerror = () => toast('Could not load image — try a different file.');
+  img.src = srcURL;
+}
+
+function enable() {
+  ['applyBtn','hdBtn','btn4k','resetBtn','zoomIn','zoomOut'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
+  document.getElementById('zoomOut').disabled = (zoom <= 10);
+  document.getElementById('zoomIn').disabled  = (zoom >= 200);
+}
+
+/* ─── Hold-to-repeat for zoom ─── */
+let holdTimer = null;
+let holdRAF   = null;
+let holdActive = false;
+
+function holdStart(dir) {
+  holdStop();
+  holdActive = true;
+  applyZoom(dir);
+  holdTimer = setTimeout(() => {
+    let last = 0;
+    function loop(ts) {
+      if (!holdActive) return;
+      if (ts - last >= 60) { applyZoom(dir); last = ts; }
+      holdRAF = requestAnimationFrame(loop);
+    }
+    holdRAF = requestAnimationFrame(loop);
+  }, 340);
+}
+
+function holdStop() {
+  holdActive = false;
+  clearTimeout(holdTimer);
+  cancelAnimationFrame(holdRAF);
+}
+
+let renderTimer = null;
+function applyZoom(dir) {
+  zoom = Math.max(10, Math.min(200, zoom + dir));
+  syncZoomUI();
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(() => { if (srcImg) render(); }, 120);
+}
+
+function syncZoomUI() {
+  const t = zoom + '%';
+  document.getElementById('zoomVal').textContent      = t;
+  document.getElementById('floatZoomVal').textContent = t;
+  document.getElementById('zoomOut').disabled = (zoom <= 10);
+  document.getElementById('zoomIn').disabled  = (zoom >= 200);
+}
+
+function resetZoom() {
+  zoom = 100; syncZoomUI();
+  if (srcImg) render();
+}
+
+/* ─── Core: build the composite canvas ─── */
+/*
+  Logic:
+  - Canvas = image's natural size
+  - Ghost layer: full image, desaturated + sepia + blurred, drawn at 115% scale centered, 50% opacity
+  - Front image: drawn centered at (zoom/100) scale — so at 100% it fills exactly; at 80% it's smaller revealing ghost around it
+  - Front image drawn in FULL COLOR on top — no filters applied to it
+*/
+function buildCanvas(targetWidth) {
+  const NW = srcImg.naturalWidth;
+  const NH = srcImg.naturalHeight;
+
+  // Scale factor to reach targetWidth
+  const sf = targetWidth / NW;
+
+  const W = Math.round(NW * sf);
+  const H = Math.round(NH * sf);
+
+  const c   = document.createElement('canvas');
+  c.width   = W;
+  c.height  = H;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  /* ── Step 1: Build ghost at full export resolution ── */
+  const ghostC  = document.createElement('canvas');
+  ghostC.width  = W;
+  ghostC.height = H;
+  const gc      = ghostC.getContext('2d');
+  gc.imageSmoothingEnabled = true;
+  gc.imageSmoothingQuality = 'high';
+
+  // Draw original image at export size into ghost canvas
+  gc.drawImage(srcImg, 0, 0, W, H);
+
+  // Desaturate (grayscale)
+  const id = gc.getImageData(0, 0, W, H);
+  const px = id.data;
+  for (let i = 0; i < px.length; i += 4) {
+    const gray = px[i] * 0.299 + px[i+1] * 0.587 + px[i+2] * 0.114;
+    px[i]   = gray;
+    px[i+1] = gray;
+    px[i+2] = gray;
+  }
+  gc.putImageData(id, 0, 0);
+
+  // Vintage / sepia
+  const id2 = gc.getImageData(0, 0, W, H);
+  const px2 = id2.data;
+  for (let i = 0; i < px2.length; i += 4) {
+    const r = px2[i], g = px2[i+1], b = px2[i+2];
+    px2[i]   = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+    px2[i+1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+    px2[i+2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+  }
+  gc.putImageData(id2, 0, 0);
+
+  /* ── Step 2: Draw ghost onto main canvas — centered, scaled up slightly, blurred, 50% opacity ── */
+  const ghostScale = 1.15;
+  const gW = W * ghostScale;
+  const gH = H * ghostScale;
+  const gX = (W - gW) / 2;
+  const gY = (H - gH) / 2;
+
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.filter      = `blur(${Math.round(18 * sf)}px)`;
+  ctx.drawImage(ghostC, gX, gY, gW, gH);
+  ctx.filter      = 'none';
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  /* ── Step 3: Draw front image in FULL COLOR, centered, at zoom scale ── */
+  const zoomF = zoom / 100;
+  const fW    = W * zoomF;
+  const fH    = H * zoomF;
+  const fX    = (W - fW) / 2;
+  const fY    = (H - fH) / 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.clip();
+  ctx.globalAlpha = 1;
+  // Draw directly from original source — no colour processing
+  ctx.drawImage(srcImg, fX, fY, fW, fH);
+  ctx.restore();
+
+  return c;
+}
+
+/* ─── Render preview ─── */
+function render() {
+  if (!srcImg) return;
+  spinner(true, 'Rendering…');
+
+  setTimeout(() => {
+    try {
+      // Build at native resolution for preview
+      const full = buildCanvas(srcImg.naturalWidth);
+
+      // Fit to preview area
+      const wrap = document.getElementById('previewWrap');
+      const maxW = wrap.clientWidth  - 24;
+      const maxH = window.innerHeight * 0.68;
+      const s    = Math.min(maxW / full.width, maxH / full.height, 1);
+
+      const pc   = document.getElementById('canvas');
+      pc.width   = Math.round(full.width  * s);
+      pc.height  = Math.round(full.height * s);
+      const pctx = pc.getContext('2d');
+      pctx.imageSmoothingEnabled = true;
+      pctx.imageSmoothingQuality = 'high';
+      pctx.drawImage(full, 0, 0, pc.width, pc.height);
+
+      pc.classList.add('show');
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('floatZoom').classList.add('show');
+
+      setStatus('Building exports…');
+      // Queue HD + 4K builds
+      setTimeout(() => {
+        hdCanvas = buildCanvas(1920);
+        k4Canvas = buildCanvas(3840);
+        setStatus('Ready to download');
+      }, 60);
+
+    } catch (err) {
+      console.error(err);
+      toast('Render error: ' + err.message);
+    }
+    spinner(false);
+  }, 30);
+}
+
+/* ─── Download ─── */
+function download(quality) {
+  const c = quality === '4k' ? k4Canvas : hdCanvas;
+  if (!c) { toast('Export not ready yet — wait a moment then try again.'); return; }
+
+  const name = (document.getElementById('filenameInput').value || '').trim();
+  const safe = name
+    ? name.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_').toLowerCase()
+    : 'ghost_infographic';
+  const filename = `${safe}_${quality}.jpg`;
+
+  setStatus('Generating JPEG…');
+  c.toBlob(blob => {
+    if (!blob) { toast('Export failed — please re-upload and try again.'); return; }
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 6000);
+    setStatus('✓ Saved as ' + filename);
+  }, 'image/jpeg', 0.96);
+}
+
+/* ─── Reset canvas (keep image) ─── */
+function resetCanvas() {
+  zoom = 100;
+  syncZoomUI();
+  document.getElementById('filenameInput').value = '';
+  hdCanvas = null;
+  k4Canvas = null;
+  if (srcImg) render();
+}
+
+/* ─── Status ─── */
+function setStatus(txt) {
+  const pill = document.getElementById('statusPill');
+  pill.classList.add('on');
+  document.getElementById('statusTxt').textContent = txt;
+}
+
+/* ─── Spinner ─── */
+function spinner(on, msg) {
+  document.getElementById('spinnerWrap').classList.toggle('on', on);
+  if (msg) document.getElementById('spinnerTxt').textContent = msg;
+}
+
+/* ─── Toast ─── */
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 5000);
+}
+</script>
+</body>
+</html>
