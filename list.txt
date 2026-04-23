@@ -1,0 +1,50 @@
+Common:
+Cow (domestic)
+Dog (stray & pet)
+Cat (domestic)
+Goat
+Sheep
+Indian Palm Squirrel
+Malabar Giant Squirrel
+Black Rat
+House Mouse
+Indian Hare
+
+Moderately Common:
+Nilgai
+Wild Boar
+Golden Jackal
+Indian Grey Mongoose
+Rhesus Macaque (technically quadrupedal often)
+Hanuman Langur
+
+Rare:
+Sloth Bear
+Dhole (Indian wild dog)
+Gaur
+Sambar Deer
+Chousingha (four-horned antelope)
+Indian Pangolin
+
+Very Rare:
+Snow Leopard
+Red Panda
+Clouded Leopard
+Lion-tailed Macaque
+Nilgiri Tahr
+
+Endangered:
+Bengal Tiger
+Asiatic Lion
+Indian Elephant
+Indian Rhinoceros
+Great Indian Bustard
+Indian Pangolin
+
+
+
+Engg Canvas - Kaushik/Manoj
+Budget Sheet - Chirayu
+Pitch Video - Chirayu
+Demo Look & Feel - Kaushik/Manoj to take Thursday screenshot
+Supporting Material (Case Study etc.) - Chirayu
