@@ -1,0 +1,32 @@
+Create a visually rich, high-detail infographic about: House Mouse
+
+Area: India
+
+Style it as a bold graphic illustration with a dense, tactile, editorial feel. Use a detailed, photorealistic representation of above topic as the central hero element. 
+
+Composition:
+- Layered layout combining photorealism with graphic elements (shapes, icons, color blocks, annotations)
+- Clean, minimal background with strong contrast
+- Use arrows, labels, diagram-style callouts, and structured annotations (avoid generic text sections)
+- Maintain clear visual hierarchy: hero → supporting visuals → micro details
+- Keep text minimal, sharp, and informative
+
+Layout Requirements:
+- Vertical 9:16 (Instagram Reel format)
+- Maintain a consistent 2-line width border margin on all sides (no critical content near edges)
+
+
+Content (present as visual callouts, not plain sections):
+
+- Physical characteristics
+- Region in area where they most commonly found 
+- Diet
+- Behaviour and Style
+- Speed
+- Types (if any)
+- Cultural Significance (if any)
+- Conversation Status if any of define if they are rare, common etc.
+- other importance (if any)
+- End with "Did you know"
+
+Output should be professional, balanced, visually dense but not cluttered, and optimized for mobile readability.
