@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f13;
+    --surface: #16181f;
+    --surface2: #1d2029;
+    --border: #2a2d38;
+    --border2: #363a48;
+    --accent: #6ee7b7;
+    --accent2: #34d399;
+    --accent-dim: rgba(110,231,183,0.12);
+    --accent-dim2: rgba(110,231,183,0.06);
+    --text: #e8eaf0;
+    --text2: #9aa0b4;
+    --text3: #5a6070;
+    --placeholder-bg: #1a2e24;
+    --placeholder-border: #2d5a42;
+    --placeholder-text: #6ee7b7;
+    --blank-bg: #1a1f2e;
+    --blank-border: #2d3a5a;
+    --blank-filled: #1a2535;
+    --blank-filled-border: #4a80c4;
+    --blank-filled-text: #93c5fd;
+    --danger: #f87171;
+    --add-btn: #252a38;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Layout */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-left h1 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .topbar-left p {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .topbar-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Left panel: editor */
+  .editor-panel {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 28px 28px 80px;
+    overflow-y: auto;
+    max-height: calc(100vh - 65px);
+  }
+
+  /* Right panel: preview */
+  .preview-panel {
+    background: var(--surface2);
+    padding: 28px;
+    overflow-y: auto;
+    max-height: calc(100vh - 65px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Sentence blocks */
+  .sentences-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sentence-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    position: relative;
+    transition: border-color 0.2s;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .sentence-block:hover {
+    border-color: var(--border2);
+  }
+
+  .sentence-block.focused {
+    border-color: rgba(110,231,183,0.4);
+  }
+
+  .sentence-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.9;
+  }
+
+  /* Static text token */
+  .token-text {
+    font-size: 14px;
+    color: var(--text2);
+    user-select: none;
+    line-height: 1.7;
+  }
+
+  /* Blank (placeholder) input */
+  .blank-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .blank-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    line-height: 1;
+  }
+
+  .blank-input {
+    background: var(--blank-bg);
+    border: 1.5px dashed var(--blank-border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    min-width: 80px;
+    width: auto;
+    outline: none;
+    transition: all 0.18s;
+    text-align: center;
+    cursor: text;
+  }
+
+  .blank-input::placeholder {
+    color: var(--text3);
+    font-style: italic;
+    font-size: 12px;
+  }
+
+  .blank-input:focus {
+    border-color: var(--accent);
+    border-style: solid;
+    background: var(--placeholder-bg);
+    color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(110,231,183,0.1);
+  }
+
+  .blank-input.filled {
+    border-style: solid;
+    border-color: var(--blank-filled-border);
+    background: var(--blank-filled);
+    color: var(--blank-filled-text);
+  }
+
+  /* Sentence controls */
+  .sentence-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .sentence-block:hover .sentence-controls { opacity: 1; }
+
+  .ctrl-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text3);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .ctrl-btn:hover { color: var(--text); background: var(--border2); }
+  .ctrl-btn.del:hover { color: var(--danger); border-color: var(--danger); background: rgba(248,113,113,0.1); }
+
+  /* Between-sentence add button */
+  .add-between {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .add-between:hover { opacity: 1 !important; }
+  .sentences-list:hover .add-between { opacity: 0.4; }
+
+  .add-between-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .add-between-btn {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--add-btn);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    font-family: 'Sora', sans-serif;
+  }
+  .add-between-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* Custom sentence editor */
+  .custom-sentence-editor {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    animation: slideIn 0.2s ease;
+  }
+
+  .custom-sentence-editor label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .custom-editor-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .custom-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    min-height: 44px;
+    transition: border-color 0.15s;
+  }
+  .custom-input:focus { border-color: var(--accent); }
+  .custom-input::placeholder { color: var(--text3); font-size: 12px; }
+
+  .custom-hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 6px;
+  }
+  .custom-hint code {
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+
+  .custom-editor-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: flex-end;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a1a12;
+  }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text3);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+  .btn-copy {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(110,231,183,0.3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+  }
+  .btn-copy:hover { background: rgba(110,231,183,0.2); }
+  .btn-copy.copied { background: var(--accent); color: #0a1a12; }
+
+  /* Preview */
+  .preview-box {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    color: var(--text2);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 200px;
+  }
+
+  .preview-blank {
+    color: var(--accent);
+    font-weight: 600;
+    background: var(--accent-dim);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+
+  .preview-unfilled {
+    color: var(--text3);
+    font-weight: 500;
+    background: var(--blank-bg);
+    border-radius: 4px;
+    padding: 0 6px;
+    border: 1px dashed var(--blank-border);
+    font-style: italic;
+  }
+
+  .preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* Variables legend */
+  .vars-legend {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+
+  .vars-legend-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .vars-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .var-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim2);
+    border: 1px solid rgba(110,231,183,0.2);
+    border-radius: 20px;
+    padding: 3px 10px 3px 6px;
+    font-size: 12px;
+  }
+  .var-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .var-chip-dot.empty {
+    background: transparent;
+    border: 1.5px dashed var(--text3);
+  }
+  .var-chip-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  .var-chip-val {
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* Add sentence floating button at bottom */
+  .add-bottom {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-add-sentence {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--add-btn);
+    border: 1px dashed var(--border2);
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-add-sentence:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* Completion meter */
+  .completion-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .completion-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .completion-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .completion-pct {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; }
+    .editor-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; }
+    .preview-panel { max-height: none; }
+    .topbar { padding: 12px 16px; }
+    .editor-panel, .preview-panel { padding: 20px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Prompt Builder</h1>
+      <p>Fill in the blanks → preview → copy</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-copy" id="copy-btn" onclick="copyPrompt()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy Prompt
+      </button>
+    </div>
+  </div>
+
+  <!-- Editor Panel -->
+  <div class="editor-panel">
+    <div class="panel-label">Fill in the blanks</div>
+    <div class="sentences-list" id="sentences-list"></div>
+    <div class="add-bottom">
+      <button class="btn-add-sentence" onclick="addSentenceAtEnd()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add sentence
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview Panel -->
+  <div class="preview-panel">
+    <div class="panel-label">Live preview</div>
+
+    <div class="completion-bar-wrap">
+      <div class="completion-bar-bg">
+        <div class="completion-bar-fill" id="completion-fill" style="width:0%"></div>
+      </div>
+      <div class="completion-pct" id="completion-pct">0%</div>
+    </div>
+
+    <div class="vars-legend" id="vars-legend">
+      <div class="vars-legend-title">Variables</div>
+      <div class="vars-list" id="vars-list"></div>
+    </div>
+
+    <div class="preview-box" id="preview-box"></div>
+
+    <div class="preview-actions">
+      <button class="btn btn-copy" id="copy-btn2" onclick="copyPrompt()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy prompt
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Initial prompt template ──
+const INITIAL_TEMPLATE = [
+  { id: uid(), text: "Create a visually rich infographic about [animal] in [region]." },
+  { id: uid(), text: "Language: [language]" },
+  { id: uid(), text: "If [animal] has multiple types, breeds, species, or notable variations, include 2–4 distinct variants and highlight them separately with clear visual differentiation and labeled comparisons." },
+  { id: uid(), text: "Start by referencing a real-world example for visual grounding. Research its habitat, diet, behavior, cultural significance (if relevant), and unique traits." },
+  { id: uid(), text: "Design it as a bold, graphic illustration with a detailed, photorealistic central subject as the focal point." },
+  { id: uid(), text: "Surrounding annotated diagrams, callouts, and labeled elements (avoid generic sections). Include comparison blocks for each variant (size, color, traits, use, etc.)." },
+  { id: uid(), text: "Visual style: Clean background with layered composition. Mix of photorealism + strong graphic elements (geometric shapes, icons, color blocking)." },
+  { id: uid(), text: "Use arrows, labels, measurement lines, and structured callouts. Dense, tactile, and professionally authored layout." },
+  { id: uid(), text: "Keep text concise, visual-first, and infographic-driven. All text labels and annotations must be in [language]." },
+];
+
+// State
+let sentences = INITIAL_TEMPLATE.map(s => ({ ...s }));
+let values = {}; // varName -> value
+
+function uid() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+// Parse a sentence into tokens: [{type:'text',val:''},{type:'blank',name:'animal'}]
+function parseSentence(text) {
+  const tokens = [];
+  const regex = /\[([^\]]+)\]/g;
+  let last = 0, m;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) tokens.push({ type: 'text', val: text.slice(last, m.index) });
+    tokens.push({ type: 'blank', name: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) tokens.push({ type: 'text', val: text.slice(last) });
+  return tokens;
+}
+
+// Get all unique variable names across all sentences
+function getAllVars() {
+  const seen = new Set();
+  const vars = [];
+  sentences.forEach(s => {
+    parseSentence(s.text).forEach(t => {
+      if (t.type === 'blank' && !seen.has(t.name)) {
+        seen.add(t.name);
+        vars.push(t.name);
+      }
+    });
+  });
+  return vars;
+}
+
+// Render everything
+function render() {
+  renderEditor();
+  renderPreview();
+  renderVarsLegend();
+  renderCompletion();
+}
+
+function renderEditor() {
+  const list = document.getElementById('sentences-list');
+  list.innerHTML = '';
+
+  sentences.forEach((sentence, idx) => {
+    // Add-between button (before each sentence)
+    const addBetween = document.createElement('div');
+    addBetween.className = 'add-between';
+    addBetween.innerHTML = `
+      <div class="add-between-line"></div>
+      <button class="add-between-btn" onclick="insertSentenceAt(${idx})">+ insert sentence here</button>
+      <div class="add-between-line"></div>
+    `;
+    list.appendChild(addBetween);
+
+    // Sentence block
+    const block = document.createElement('div');
+    block.className = 'sentence-block';
+    block.id = 'sentence-' + sentence.id;
+
+    const tokens = parseSentence(sentence.text);
+    let rowHTML = '<div class="sentence-row">';
+    tokens.forEach(token => {
+      if (token.type === 'text') {
+        rowHTML += `<span class="token-text">${escHtml(token.val)}</span>`;
+      } else {
+        const val = values[token.name] || '';
+        rowHTML += `
+          <div class="blank-wrap">
+            <span class="blank-label">${escHtml(token.name)}</span>
+            <input class="blank-input ${val ? 'filled' : ''}"
+              data-var="${escHtml(token.name)}"
+              placeholder="${escHtml(token.name)}…"
+              value="${escHtml(val)}"
+              title="Fill in: ${escHtml(token.name)}"
+              oninput="onBlankInput(this)"
+              onfocus="this.closest('.sentence-block').classList.add('focused')"
+              onblur="this.closest('.sentence-block').classList.remove('focused')"
+              style="width: ${Math.max(80, (val.length || token.name.length + 3) * 8 + 24)}px"
+            >
+          </div>`;
+      }
+    });
+    rowHTML += '</div>';
+
+    block.innerHTML = `
+      ${rowHTML}
+      <div class="sentence-controls">
+        <button class="ctrl-btn" title="Move up" onclick="moveSentence(${idx}, -1)">↑</button>
+        <button class="ctrl-btn" title="Move down" onclick="moveSentence(${idx}, 1)">↓</button>
+        <button class="ctrl-btn del" title="Delete sentence" onclick="deleteSentence('${sentence.id}')">✕</button>
+      </div>
+    `;
+
+    list.appendChild(block);
+  });
+
+  // Final add-between at bottom
+  const addBottom = document.createElement('div');
+  addBottom.className = 'add-between';
+  addBottom.innerHTML = `
+    <div class="add-between-line"></div>
+    <button class="add-between-btn" onclick="insertSentenceAt(${sentences.length})">+ insert sentence here</button>
+    <div class="add-between-line"></div>
+  `;
+  list.appendChild(addBottom);
+}
+
+function onBlankInput(input) {
+  const name = input.dataset.var;
+  values[name] = input.value;
+  input.classList.toggle('filled', !!input.value);
+  input.style.width = Math.max(80, (input.value.length || name.length + 3) * 8 + 24) + 'px';
+  renderPreview();
+  renderVarsLegend();
+  renderCompletion();
+}
+
+function renderPreview() {
+  const box = document.getElementById('preview-box');
+  let html = '';
+  sentences.forEach((sentence, i) => {
+    if (i > 0) html += '\n';
+    const tokens = parseSentence(sentence.text);
+    tokens.forEach(token => {
+      if (token.type === 'text') {
+        html += escHtml(token.val);
+      } else {
+        const val = values[token.name];
+        if (val) {
+          html += `<span class="preview-blank">${escHtml(val)}</span>`;
+        } else {
+          html += `<span class="preview-unfilled">[${escHtml(token.name)}]</span>`;
+        }
+      }
+    });
+  });
+  box.innerHTML = html;
+}
+
+function renderVarsLegend() {
+  const vars = getAllVars();
+  const list = document.getElementById('vars-list');
+  if (!vars.length) {
+    document.getElementById('vars-legend').style.display = 'none';
+    return;
+  }
+  document.getElementById('vars-legend').style.display = '';
+  list.innerHTML = vars.map(v => {
+    const val = values[v];
+    return `<div class="var-chip">
+      <div class="var-chip-dot ${val ? '' : 'empty'}"></div>
+      <span class="var-chip-name">${escHtml(v)}</span>
+      ${val ? `<span class="var-chip-val">= ${escHtml(val)}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderCompletion() {
+  const vars = getAllVars();
+  const filled = vars.filter(v => values[v]);
+  const pct = vars.length ? Math.round((filled.length / vars.length) * 100) : 100;
+  document.getElementById('completion-fill').style.width = pct + '%';
+  document.getElementById('completion-pct').textContent = pct + '%';
+}
+
+// ── Sentence CRUD ──
+function insertSentenceAt(idx) {
+  // Show inline editor at that position
+  const list = document.getElementById('sentences-list');
+  // Remove any existing inline editor
+  document.querySelectorAll('.custom-sentence-editor').forEach(e => e.remove());
+
+  const editor = document.createElement('div');
+  editor.className = 'custom-sentence-editor';
+  editor.innerHTML = `
+    <label>Type your sentence. Wrap variable names in square brackets, e.g. <code>[animal]</code></label>
+    <div class="custom-editor-row">
+      <textarea class="custom-input" id="new-sentence-input" rows="2" placeholder="e.g. Focus on the [region] subspecies behavior patterns."></textarea>
+    </div>
+    <div class="custom-hint">Use <code>[variable]</code> to create fill-in-the-blank fields. Existing variables will be reused.</div>
+    <div class="custom-editor-actions">
+      <button class="btn btn-ghost" onclick="cancelAdd()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAdd(${idx})">Add sentence</button>
+    </div>
+  `;
+
+  // Insert after the add-between at idx (which is child idx*2 + 1 in the DOM... simplest: re-render with pending)
+  // Simpler: store pending insertion index and re-render
+  window._pendingInsertIdx = idx;
+  window._pendingEditor = editor;
+
+  // We'll insert the editor right in the list at the right spot
+  const children = [...list.children]; // add-between, block, add-between, block, ...
+  // Each sentence has one add-between before it plus the block. Index idx means insert before sentence[idx].
+  // DOM structure: [add-between0, block0, add-between1, block1, ..., add-betweenN]
+  // We want to insert after add-between[idx], so at DOM child index idx*2 + 1
+  const insertAfter = children[idx * 2]; // the add-between at idx
+  if (insertAfter) {
+    insertAfter.after(editor);
+  } else {
+    list.appendChild(editor);
+  }
+
+  document.getElementById('new-sentence-input').focus();
+}
+
+function cancelAdd() {
+  document.querySelectorAll('.custom-sentence-editor').forEach(e => e.remove());
+}
+
+function confirmAdd(idx) {
+  const text = document.getElementById('new-sentence-input').value.trim();
+  if (!text) { cancelAdd(); return; }
+  sentences.splice(idx, 0, { id: uid(), text });
+  render();
+}
+
+function deleteSentence(id) {
+  if (sentences.length <= 1) return;
+  sentences = sentences.filter(s => s.id !== id);
+  render();
+}
+
+function moveSentence(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= sentences.length) return;
+  [sentences[idx], sentences[newIdx]] = [sentences[newIdx], sentences[idx]];
+  render();
+}
+
+function addSentenceAtEnd() {
+  insertSentenceAt(sentences.length);
+}
+
+// ── Copy ──
+function getPlainText() {
+  return sentences.map(s => {
+    const tokens = parseSentence(s.text);
+    return tokens.map(t => t.type === 'text' ? t.val : (values[t.name] || `[${t.name}]`)).join('');
+  }).join('\n');
+}
+
+function copyPrompt() {
+  const text = getPlainText();
+  navigator.clipboard.writeText(text).then(() => {
+    ['copy-btn', 'copy-btn2'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.classList.add('copied');
+      btn.innerHTML = btn.innerHTML.replace(/Copy.*/, 'Copied! ✓');
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = btn.innerHTML.replace(/Copied! ✓/, 'Copy Prompt') || btn.innerHTML;
+        btn.innerHTML = btn.innerHTML.replace(/Copied! ✓/, 'Copy prompt');
+        // just re-render the button labels
+        btn.querySelector('svg') && (btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> ${id === 'copy-btn' ? 'Copy Prompt' : 'Copy prompt'}`);
+      }, 2000);
+    });
+  });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>
